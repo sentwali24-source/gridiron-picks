@@ -36,7 +36,8 @@ export default defineConfig({
             handler: 'NetworkFirst',
             options: {
               cacheName: 'espn-api',
-              expiration: { maxEntries: 60, maxAgeSeconds: 5 * 60 },
+              networkTimeoutSeconds: 4, // flaky signal: fall back to saved copy fast
+              expiration: { maxEntries: 60, maxAgeSeconds: 7 * 24 * 60 * 60 },
             },
           },
           {

@@ -21,10 +21,23 @@ export default function App() {
   const [error, setError] = useState(null);
   const [picks, setPicks] = useState(loadPicks);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
+  const [stale, setStale] = useState(false); // showing a saved copy because the live feed was unreachable
   const timer = useRef(null);
 
   useEffect(() => localStorage.setItem('gp:league', league), [league]);
   useEffect(() => savePicks(picks), [picks]);
+
+  useEffect(() => {
+    const up = () => setOnline(true);
+    const down = () => setOnline(false);
+    window.addEventListener('online', up);
+    window.addEventListener('offline', down);
+    return () => {
+      window.removeEventListener('online', up);
+      window.removeEventListener('offline', down);
+    };
+  }, []);
 
   const load = useCallback(
     async (silent = false) => {
@@ -33,17 +46,45 @@ export default function App() {
       try {
         const result = await fetchWeek(league, week);
         setData(result);
+        setStale(false);
         if (week == null) setCurrentWeek((c) => ({ ...c, [league]: result.week }));
         setPicks((p) => gradePicks(p, league, result.games));
         setLastUpdated(new Date());
+        // Keep a copy of every week we've seen so the app still works with no signal.
+        try {
+          localStorage.setItem(`gp:cache:${league}:${result.week}`, JSON.stringify({ ...result, savedAt: Date.now() }));
+          if (week == null) localStorage.setItem(`gp:cache:${league}:current`, String(result.week));
+        } catch {
+          /* storage full — live mode still works */
+        }
       } catch (e) {
-        setError(e.message || 'Could not load games');
+        const wk = week ?? localStorage.getItem(`gp:cache:${league}:current`);
+        let saved = null;
+        try {
+          saved = wk ? JSON.parse(localStorage.getItem(`gp:cache:${league}:${wk}`)) : null;
+        } catch {
+          saved = null;
+        }
+        if (saved?.games?.length) {
+          setData(saved);
+          setStale(true);
+          setLastUpdated(saved.savedAt ? new Date(saved.savedAt) : null);
+          if (week == null) setCurrentWeek((c) => ({ ...c, [league]: saved.week }));
+        } else {
+          setError(e.message || 'Could not load games');
+        }
       } finally {
         setLoading(false);
       }
     },
     [league, week]
   );
+
+  // Reconnect: refresh the moment signal comes back.
+  useEffect(() => {
+    if (online && stale) load(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online]);
 
   useEffect(() => {
     load();
@@ -138,6 +179,12 @@ export default function App() {
         </div>
       </header>
 
+      {(!online || stale) && (
+        <div className="offline-banner" role="status">
+          {!online ? '📡 You’re offline — showing saved games and your picks.' : '📡 Live scores unavailable — showing the last saved copy.'}
+        </div>
+      )}
+
       {tab !== 'board' && (
         <div className="weekbar">
           <button className="weeknav" disabled={!canPrev} onClick={() => setWeek(shownWeek - 1)} aria-label="Previous week">
@@ -161,7 +208,7 @@ export default function App() {
       <main className="screen">{screen}</main>
 
       <footer className="statusline">
-        {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : ''}
+        {lastUpdated ? `${stale ? 'Saved' : 'Updated'} ${lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : ''}
         <button className="linkbtn" onClick={() => load(true)} disabled={loading}>
           Refresh
         </button>
