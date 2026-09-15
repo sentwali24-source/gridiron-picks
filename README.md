@@ -2,7 +2,7 @@
 
 Weekly NFL and college football pick'em. Installable on your phone from the browser (no app store needed).
 
-**Live site:** `https://<your-github-username>.github.io/gridiron-picks/`
+**Live site:** `https://sentwali24-source.github.io/gridiron-picks/`
 
 ## What it does
 
