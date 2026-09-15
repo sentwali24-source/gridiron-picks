@@ -108,6 +108,25 @@ export function pairKey(offRole, defRole) {
 export function isSupported(offRole, defRole) {
   return !!PAIRS[pairKey(offRole, defRole)];
 }
+export const PAIR_KEYS = Object.keys(PAIRS);
+export function pairLabel(key) {
+  const [o, , d] = key.split('_');
+  return `${ROLE_LABEL[o] || o} vs ${ROLE_LABEL[d] || d}`;
+}
+
+/** Built-in weights for a pairing: { off: {stat: weight}, def: {stat: weight} } (copies, safe to edit). */
+export function defaultWeights(key) {
+  const p = PAIRS[key];
+  return p ? { off: { ...p[0] }, def: { ...p[1] } } : null;
+}
+
+/** Effective weights = user overrides (from Settings) layered over the defaults. */
+export function effectiveWeights(key, overrides) {
+  const d = defaultWeights(key);
+  if (!d) return null;
+  const o = overrides?.[key];
+  return o ? { off: { ...d.off, ...o.off }, def: { ...d.def, ...o.def } } : d;
+}
 
 function norm(key, value) {
   if (value == null || Number.isNaN(value)) return null;
@@ -123,12 +142,14 @@ const fmt = (v) => (v == null ? '–' : Number.isInteger(v) ? v.toLocaleString()
  * @param offStats { statName: number } projected full-season numbers for the offensive player
  * @param defStats { statName: number } for the defender
  */
-export function analyze(offRole, defRole, offStats = {}, defStats = {}) {
-  const pair = PAIRS[pairKey(offRole, defRole)];
+export function analyze(offRole, defRole, offStats = {}, defStats = {}, overrides = null) {
+  const key = pairKey(offRole, defRole);
+  const pair = PAIRS[key];
   if (!pair) {
     return { supported: false, score: 0, side: 'neutral', factors: [], explanation: `${ROLE_LABEL[offRole] || offRole} vs ${ROLE_LABEL[defRole] || defRole} isn't a matchup this grades yet.`, confidence: 0 };
   }
-  const [offW, defW, story] = pair;
+  const story = pair[2];
+  const { off: offW, def: defW } = effectiveWeights(key, overrides);
 
   const side = (weights, stats, who) => {
     let sum = 0;
@@ -172,6 +193,7 @@ export function analyze(offRole, defRole, offStats = {}, defStats = {}) {
 
   return {
     supported: true,
+    pair: key,
     score,
     side: verdict,
     offScore: Math.round(offAvg),

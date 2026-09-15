@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { fetchRoster, fetchPlayerStats } from '../api/espnPlayers';
 import { analyze, isSupported, ROLE_LABEL } from '../engine/matchupEngine';
+import { loadWeights, saveWeights } from '../store/weights';
+import WeightsPanel from './WeightsPanel';
 
 const SAVE_KEY = 'gp:matchups:v1';
 const loadSaved = () => {
@@ -60,6 +62,9 @@ export default function MatchupAnalyzer({ league, season, teams, gameId }) {
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
   const [saved, setSaved] = useState(loadSaved);
+  const [overrides, setOverrides] = useState(loadWeights);
+  const [showWeights, setShowWeights] = useState(false);
+  const [lastStats, setLastStats] = useState(null); // { off, def } projected stats behind the current result
 
   const offTeam = teams[offIdx];
   const defTeam = teams[1 - offIdx];
@@ -95,7 +100,8 @@ export default function MatchupAnalyzer({ league, season, teams, gameId }) {
     setError(null);
     try {
       const [os, ds] = await Promise.all([fetchPlayerStats(league, offP.id, season), fetchPlayerStats(league, defP.id, season)]);
-      const r = analyze(offP.role, defP.role, os.projected, ds.projected);
+      setLastStats({ off: os.projected, def: ds.projected });
+      const r = analyze(offP.role, defP.role, os.projected, ds.projected, overrides);
       const entry = {
         id: `${Date.now()}`,
         gameId: gameId || null,
@@ -223,7 +229,27 @@ export default function MatchupAnalyzer({ league, season, teams, gameId }) {
               .filter(Boolean)
               .join(' · ')}
             {result.confidence < 100 && ` · ${result.confidence}% of stats available`}
+            {overrides?.[result.pair] && ' · custom weights'}
           </div>
+          <button className="linkbtn" style={{ display: 'block', margin: '8px auto 0' }} onClick={() => setShowWeights((v) => !v)}>
+            {showWeights ? 'Hide weights' : '⚙ Adjust grading weights'}
+          </button>
+          {showWeights && (
+            <WeightsPanel
+              pair={result.pair}
+              overrides={overrides}
+              onClose={() => setShowWeights(false)}
+              onChange={(next) => {
+                setOverrides(next);
+                saveWeights(next);
+                // Re-grade the current matchup instantly with the new levers (no refetch).
+                if (lastStats && result) {
+                  const r = analyze(result.off.role, result.def.role, lastStats.off, lastStats.def, next);
+                  setResult((cur) => ({ ...cur, ...r }));
+                }
+              }}
+            />
+          )}
         </div>
       )}
 
