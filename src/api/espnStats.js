@@ -83,6 +83,10 @@ export async function fetchGameSummary(leagueKey, gameId) {
         homeML: pc.homeTeamOdds?.moneyLine,
         awayML: pc.awayTeamOdds?.moneyLine,
         homeFav: pc.homeTeamOdds?.favorite,
+        homeSpreadOdds: pc.homeTeamOdds?.spreadOdds,
+        awaySpreadOdds: pc.awayTeamOdds?.spreadOdds,
+        overOdds: pc.overOdds,
+        underOdds: pc.underOdds,
       }
     : null;
 

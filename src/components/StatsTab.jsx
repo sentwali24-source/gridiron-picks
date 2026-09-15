@@ -1,12 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { fetchLeaders, fetchStandings, fetchTeamStats, KEY_TEAM_STATS } from '../api/espnStats';
 import MatchupAnalyzer from './MatchupAnalyzer';
+import ModelLevers from './ModelLevers';
+import { loadLevers, saveLevers, resetLevers } from '../store/model';
 
 const VIEWS = [
   ['leaders', 'Leaders'],
   ['standings', 'Standings'],
   ['teams', 'Team stats'],
   ['matchups', 'Matchups'],
+  ['model', 'Model'],
 ];
 
 export default function StatsTab({ league, season }) {
@@ -41,12 +44,14 @@ export default function StatsTab({ league, season }) {
 
   const [mA, setMA] = useState('');
   const [mB, setMB] = useState('');
+  const [levers, setLevers] = useState(() => loadLevers(league));
 
   useEffect(() => {
     setCat(0);
     setTeamId('');
     setMA('');
     setMB('');
+    setLevers(loadLevers(league));
   }, [league]);
 
   // Team stats on demand.
@@ -160,6 +165,29 @@ export default function StatsTab({ league, season }) {
           </section>
         ))}
 
+      {view === 'model' && (
+        <>
+          <div className="note" style={{ marginTop: 0 }}>
+            <strong>How the Edge card works</strong> — four layers, every one adjustable below:
+            <ol className="explain">
+              <li>
+                <strong>Odds → probability.</strong> The book's line becomes an implied win rate (−110 ⇒ 52.4%); the vig is stripped so the two sides add to 100%.
+              </li>
+              <li>
+                <strong>Distributions.</strong> Final margins and totals are modeled as a bell curve around the projection; σ sets how wide.
+              </li>
+              <li>
+                <strong>Predictive model.</strong> Home field plus weighted differences in scoring, points allowed, yards, turnover margin, 3rd downs, sacks, and red-zone rate give a projected margin, then 10,000 simulated games. A "key player out" toggle shifts the baseline (Bayes).
+              </li>
+              <li>
+                <strong>Decision.</strong> Expected value per $100 at the book's price, and a fractional-Kelly stake from your bankroll. Positive EV rows are highlighted.
+              </li>
+            </ol>
+          </div>
+          <ModelLevers league={league} levers={levers} onChange={(next) => { setLevers(next); saveLevers(league, next); }} onReset={() => setLevers(resetLevers(league))} />
+        </>
+      )}
+
       {view === 'matchups' && (
         <>
           <p className="muted small-text" style={{ margin: '0 0 10px' }}>
@@ -183,17 +211,12 @@ export default function StatsTab({ league, season }) {
               </label>
             ))}
           </div>
-          {mA && mB && (
-            <MatchupAnalyzer
-              key={`${league}:${mA}:${mB}`}
-              league={league}
-              season={season}
-              teams={[mA, mB].map((id) => {
-                const t = allTeams.find((x) => x.id === id);
-                return { id: t.id, abbr: t.abbr, short: t.name, logo: t.logo };
-              })}
-            />
-          )}
+          {(() => {
+            const picked = [mA, mB].map((id) => allTeams.find((x) => x.id === id)).filter(Boolean);
+            return picked.length === 2 ? (
+              <MatchupAnalyzer key={`${league}:${mA}:${mB}`} league={league} season={season} teams={picked.map((t) => ({ id: t.id, abbr: t.abbr, short: t.name, logo: t.logo }))} />
+            ) : null;
+          })()}
         </>
       )}
 

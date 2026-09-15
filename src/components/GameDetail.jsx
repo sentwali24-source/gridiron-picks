@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { fetchGameSummary, fetchTeamStats, KEY_TEAM_STATS } from '../api/espnStats';
 import MatchupAnalyzer from './MatchupAnalyzer';
+import EdgeCard from './EdgeCard';
 
 // Box-score lines worth comparing for a live/finished game, in display order.
 const GAME_STAT_ROWS = [
@@ -314,6 +315,8 @@ export default function GameDetail({ game, league, season: seasonYear, pick, onP
                 <div className="muted">Lines not posted yet — usually appear a few days before kickoff.</div>
               )}
             </section>
+
+            <EdgeCard game={game} league={league} season={seasonYear} odds={odds} seasonStats={season} />
 
             {(isPre ? seasonRows : gameRows).length > 0 && (
               <section className="detail-card">
