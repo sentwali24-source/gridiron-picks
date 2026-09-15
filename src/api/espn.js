@@ -61,7 +61,9 @@ function normalizeEvent(ev) {
     winnerId: completed ? teams.find((t) => t.winner)?.id ?? null : null,
     tie: completed && home.score != null && home.score === away.score,
     spread: odds?.details || null,
+    homeSpread: odds?.spread ?? null, // numeric, home side (negative = home favored)
     overUnder: odds?.overUnder ?? null,
+    oddsProvider: odds?.provider?.name || null,
     tv: comp.broadcasts?.[0]?.names?.[0] || comp.broadcast || '',
     venue: comp.venue?.fullName || '',
   };

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { fetchStandings, fetchTeamStats } from '../api/espnStats';
-import { impliedProb, removeVig, probToAmerican, teamFeatures, predictGame, coverProb, overProb, expectedValue, kellyFraction, simulate, parseHomeSpread, shrinkFeatures, PRIORS } from '../engine/bettingModel';
+import { impliedProb, removeVig, probToAmerican, teamFeatures, predictGame, coverProb, overProb, expectedValue, kellyFraction, simulate, parseHomeSpread, shrinkFeatures, PRIORS, blendWithMarket } from '../engine/bettingModel';
 import { loadLevers, saveLevers, resetLevers, isCustom } from '../store/model';
 import ModelLevers from './ModelLevers';
 
@@ -60,7 +60,7 @@ export default function EdgeCard({ game, league, season, odds, seasonStats }) {
     const prior = PRIORS[league] || PRIORS.nfl;
     return { home: shrinkFeatures(feat.home, prior, levers.shrink), away: shrinkFeatures(feat.away, prior, levers.shrink) };
   }, [feat, league, levers.shrink]);
-  const pred = useMemo(() => (shrunk ? predictGame(shrunk.home, shrunk.away, levers, { homeOut, awayOut }) : null), [shrunk, levers, homeOut, awayOut]);
+  const basePred = useMemo(() => (shrunk ? predictGame(shrunk.home, shrunk.away, levers, { homeOut, awayOut }) : null), [shrunk, levers, homeOut, awayOut]);
 
   const market = useMemo(() => {
     if (!odds) return null;
@@ -73,6 +73,12 @@ export default function EdgeCard({ game, league, season, odds, seasonStats }) {
     const tp = removeVig(impliedProb(odds.overOdds ?? j), impliedProb(odds.underOdds ?? j));
     return { hp, ap, fairHome: fair.a, fairAway: fair.b, overround: fair.overround, homeSpread, totalLine: odds.overUnder ?? null, spreadFairHome: sp.a, spreadFairAway: sp.b, totalFairOver: tp.a, totalFairUnder: tp.b };
   }, [odds, game.home.abbr, levers.juice]);
+
+  // Anchor to the posted line (market blend lever) before anything downstream uses it.
+  const pred = useMemo(
+    () => (basePred ? blendWithMarket(basePred, market?.homeSpread ?? null, market?.totalLine ?? null, levers.marketBlend, levers.sigma) : null),
+    [basePred, market?.homeSpread, market?.totalLine, levers.marketBlend, levers.sigma]
+  );
 
   const sim = useMemo(
     () => (pred ? simulate({ margin: pred.margin, total: pred.total, sigma: levers.sigma, sigmaT: levers.sigmaT, homeSpread: market?.homeSpread ?? null, totalLine: market?.totalLine ?? null }) : null),
@@ -256,6 +262,15 @@ export default function EdgeCard({ game, league, season, odds, seasonStats }) {
                     <td>Key player out</td>
                     <td className="num muted"></td>
                     <td className="num">{signed(pred.keyAdj)}</td>
+                  </tr>
+                )}
+                {pred.blend > 0 && market?.homeSpread != null && (
+                  <tr>
+                    <td>Market anchor ({Math.round(pred.blend * 100)}% line)</td>
+                    <td className="num muted">
+                      stats {signed(pred.modelMargin)} · line {signed(-market.homeSpread)}
+                    </td>
+                    <td className="num">{signed(pred.margin - pred.modelMargin)}</td>
                   </tr>
                 )}
                 <tr>

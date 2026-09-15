@@ -132,6 +132,18 @@ export function predictGame(home, away, levers, adjustments = {}) {
   return { margin, total, keyAdj, contributions, homeWin: normCdf(margin / levers.sigma) };
 }
 
+/**
+ * Anchor the projection to the market. The posted spread already prices in injuries, weather,
+ * and things a stat model can't see, so blend: final = (1 − b) × model + b × market.
+ * homeSpread negative = home favored, so the market's implied home margin is −homeSpread.
+ */
+export function blendWithMarket(pred, homeSpread, totalLine, b, sigma) {
+  if (!pred || !b) return pred;
+  const margin = homeSpread != null ? (1 - b) * pred.margin + b * -homeSpread : pred.margin;
+  const total = totalLine != null ? (1 - b) * pred.total + b * totalLine : pred.total;
+  return { ...pred, modelMargin: pred.margin, modelTotal: pred.total, margin, total, homeWin: normCdf(margin / sigma), blend: b };
+}
+
 /* ---------- 4. Decision theory ---------- */
 
 /** Expected profit on `stake` at American odds `a` when the true win probability is `p`. */

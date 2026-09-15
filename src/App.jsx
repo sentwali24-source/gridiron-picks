@@ -6,9 +6,11 @@ import MyPicks from './components/MyPicks';
 import Leaderboard from './components/Leaderboard';
 import StatsTab from './components/StatsTab';
 import GameDetail from './components/GameDetail';
+import BestBets from './components/BestBets';
 
 const TABS = [
   { key: 'lobby', label: 'Lobby', icon: '🏈' },
+  { key: 'best', label: 'Best Bets', icon: '🔥' },
   { key: 'picks', label: 'My Picks', icon: '✅' },
   { key: 'stats', label: 'Stats', icon: '📊' },
   { key: 'board', label: 'Standings', icon: '🏆' },
@@ -150,6 +152,14 @@ export default function App() {
         return <Leaderboard picks={picks} league={league} season={data.season} />;
       case 'stats':
         return <StatsTab league={league} season={data.season} />;
+      case 'best':
+        return loading ? (
+          <div className="empty">
+            <div className="spinner" />
+          </div>
+        ) : (
+          <BestBets league={league} season={data.season} week={shownWeek} games={data.games} picks={picks} onPick={makePick} onOpen={setOpenGame} />
+        );
       default:
         return (
           <Lobby

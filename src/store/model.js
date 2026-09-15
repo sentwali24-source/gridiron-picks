@@ -4,11 +4,12 @@ const KEY = 'gp:model:v1';
 const WEIGHTS = { ppg: 0.5, papg: 0.5, ypg: 0.02, tod: 3, third: 0.08, sacks: 0.8, rz: 0.03 };
 
 export const DEFAULT_LEVERS = {
-  nfl: { hfa: 2.0, sigma: 13.5, sigmaT: 10, pace: 1.0, keyOut: 6, shrink: 6, kellyFrac: 0.25, bankroll: 1000, juice: -110, weights: { ...WEIGHTS } },
-  cfb: { hfa: 3.0, sigma: 17, sigmaT: 13, pace: 1.0, keyOut: 7, shrink: 4, kellyFrac: 0.25, bankroll: 1000, juice: -110, weights: { ...WEIGHTS } },
+  nfl: { hfa: 2.0, sigma: 13.5, sigmaT: 10, pace: 1.0, keyOut: 6, shrink: 6, marketBlend: 0.5, kellyFrac: 0.25, bankroll: 1000, juice: -110, weights: { ...WEIGHTS } },
+  cfb: { hfa: 3.0, sigma: 17, sigmaT: 13, pace: 1.0, keyOut: 7, shrink: 4, marketBlend: 0.5, kellyFrac: 0.25, bankroll: 1000, juice: -110, weights: { ...WEIGHTS } },
 };
 
 export const LEVER_INFO = [
+  { key: 'marketBlend', label: 'Market anchor', unit: '', min: 0, max: 1, step: 0.05, help: 'How much to trust the sportsbook’s line vs your stats. 0 = pure stats model, 1 = the line is always right. The book prices in injuries and news your stats can’t see.' },
   { key: 'hfa', label: 'Home-field advantage', unit: 'pts', min: 0, max: 7, step: 0.5, help: 'Points added to the home team before any stats.' },
   { key: 'shrink', label: 'Small-sample shrink', unit: 'games', min: 0, max: 16, step: 1, help: 'Regression to the mean: each team’s stats are blended toward league average until this many games are played. 0 = trust raw stats fully.' },
   { key: 'sigma', label: 'Margin volatility (σ)', unit: 'pts', min: 8, max: 22, step: 0.5, help: 'How spread out final margins are. NFL ≈ 13.5, college ≈ 17. Lower = more confident.' },
