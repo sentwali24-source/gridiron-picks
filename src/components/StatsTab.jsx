@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { fetchLeaders, fetchStandings, fetchTeamStats, KEY_TEAM_STATS } from '../api/espnStats';
+import MatchupAnalyzer from './MatchupAnalyzer';
 
 const VIEWS = [
   ['leaders', 'Leaders'],
   ['standings', 'Standings'],
   ['teams', 'Team stats'],
+  ['matchups', 'Matchups'],
 ];
 
 export default function StatsTab({ league, season }) {
@@ -37,9 +39,14 @@ export default function StatsTab({ league, season }) {
     };
   }, [view, league, season]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [mA, setMA] = useState('');
+  const [mB, setMB] = useState('');
+
   useEffect(() => {
     setCat(0);
     setTeamId('');
+    setMA('');
+    setMB('');
   }, [league]);
 
   // Team stats on demand.
@@ -152,6 +159,43 @@ export default function StatsTab({ league, season }) {
             </div>
           </section>
         ))}
+
+      {view === 'matchups' && (
+        <>
+          <p className="muted small-text" style={{ margin: '0 0 10px' }}>
+            Pick any two teams, then one player from each side, and grade the matchup with real season stats.
+          </p>
+          <div className="ma-fields">
+            {[
+              [mA, setMA, 'Team A'],
+              [mB, setMB, 'Team B'],
+            ].map(([val, set, label]) => (
+              <label key={label} className="ma-field">
+                <span className="stat-title">{label}</span>
+                <select className="team-select" value={val} onChange={(e) => set(e.target.value)}>
+                  <option value="">Choose a team…</option>
+                  {allTeams.map((t) => (
+                    <option key={t.id} value={t.id} disabled={t.id === (label === 'Team A' ? mB : mA)}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ))}
+          </div>
+          {mA && mB && (
+            <MatchupAnalyzer
+              key={`${league}:${mA}:${mB}`}
+              league={league}
+              season={season}
+              teams={[mA, mB].map((id) => {
+                const t = allTeams.find((x) => x.id === id);
+                return { id: t.id, abbr: t.abbr, short: t.name, logo: t.logo };
+              })}
+            />
+          )}
+        </>
+      )}
 
       {view === 'teams' && (
         <>

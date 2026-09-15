@@ -913,6 +913,176 @@ tr.clickable {
   padding-left: 10px;
 }
 
+/* Matchup analyzer */
+.btn.wide {
+  width: 100%;
+  padding: 12px;
+}
+.btn:disabled {
+  opacity: 0.45;
+}
+.segmented.small {
+  margin: 0 0 10px;
+}
+.segmented.small .seg {
+  font-size: 12px;
+  padding: 7px 4px;
+}
+.ma-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.ma-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.ma-field .team-select {
+  margin: 0;
+  padding: 10px;
+  font-size: 13px;
+}
+.ma-result {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+}
+.ma-result.offense {
+  border-color: rgba(83, 211, 55, 0.5);
+}
+.ma-result.defense {
+  border-color: rgba(255, 90, 95, 0.5);
+}
+.ma-heads {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.ma-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+.headshot.big {
+  width: 64px;
+  height: 64px;
+}
+.ma-head-name {
+  font-weight: 800;
+  font-size: 14px;
+}
+.ma-score {
+  margin-top: 8px;
+  font-size: 40px;
+  font-weight: 900;
+  text-align: center;
+  line-height: 1;
+}
+.ma-result.offense .ma-score {
+  color: var(--green);
+}
+.ma-result.defense .ma-score {
+  color: var(--red);
+}
+.ma-verdict {
+  text-align: center;
+  font-weight: 800;
+  margin: 4px 0 8px;
+}
+.meter-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--red), var(--border) 50%, var(--green));
+}
+.meter-marker {
+  position: absolute;
+  top: -5px;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  border-radius: 50%;
+  background: var(--text);
+  border: 3px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--border);
+}
+.meter-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.ma-explain {
+  margin: 12px 0 4px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.ma-factors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 12px;
+}
+.ma-factor {
+  margin-top: 8px;
+}
+.ma-factor-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+.ma-note {
+  margin-top: 12px;
+  text-align: center;
+}
+.ma-history {
+  margin-top: 14px;
+}
+.ma-hist {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.ma-hist.offense {
+  border-left-color: var(--green);
+}
+.ma-hist.defense {
+  border-left-color: var(--red);
+}
+.ma-hist-score {
+  min-width: 36px;
+  font-weight: 900;
+}
+.ma-hist-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ma-del {
+  color: var(--muted);
+  padding: 4px 6px;
+}
+
 /* Status line + tab bar */
 .statusline {
   display: flex;

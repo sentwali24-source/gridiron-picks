@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { fetchGameSummary, fetchTeamStats, KEY_TEAM_STATS } from '../api/espnStats';
+import MatchupAnalyzer from './MatchupAnalyzer';
 
 // Box-score lines worth comparing for a live/finished game, in display order.
 const GAME_STAT_ROWS = [
@@ -69,6 +70,7 @@ export default function GameDetail({ game, league, season: seasonYear, pick, onP
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showBox, setShowBox] = useState(false);
+  const [showMatchup, setShowMatchup] = useState(false);
   const isPre = game.state === 'pre';
   const locked = !isPre;
 
@@ -147,8 +149,8 @@ export default function GameDetail({ game, league, season: seasonYear, pick, onP
         <div className="performers-team">
           {team.logo && <img src={team.logo} alt="" />} {team.abbr}
         </div>
-        {cats.map((c) => (
-          <div key={c.name} className="performer">
+        {cats.map((c, i) => (
+          <div key={`${c.name}-${i}`} className="performer">
             {c.headshot && <img className="headshot" src={c.headshot} alt="" loading="lazy" onError={(e) => (e.currentTarget.style.visibility = 'hidden')} />}
             <div className="performer-text">
               <div className="performer-name">
@@ -262,6 +264,22 @@ export default function GameDetail({ game, league, season: seasonYear, pick, onP
             </button>
           ))}
         </div>
+
+        <section className="detail-card">
+          <div className="detail-card-title">Matchup analysis</div>
+          {showMatchup ? (
+            <MatchupAnalyzer league={league} season={seasonYear} teams={[game.away, game.home]} gameId={game.id} />
+          ) : (
+            <>
+              <p className="muted small-text" style={{ margin: '0 0 10px' }}>
+                Pick one player from each side — a running back vs a linebacker, a receiver vs a corner — and see who has the edge using real season stats.
+              </p>
+              <button className="btn wide" onClick={() => setShowMatchup(true)}>
+                Analyze a player matchup ›
+              </button>
+            </>
+          )}
+        </section>
 
         {loading && (
           <div className="empty small">
