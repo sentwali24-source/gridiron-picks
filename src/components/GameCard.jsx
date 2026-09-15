@@ -39,7 +39,7 @@ function TeamRow({ team, game, picked, locked, onPick, result }) {
   );
 }
 
-export default function GameCard({ game, pick, onPick }) {
+export default function GameCard({ game, pick, onPick, onOpen }) {
   const locked = game.state !== 'pre';
   const live = game.state === 'in';
   return (
@@ -54,6 +54,11 @@ export default function GameCard({ game, pick, onPick }) {
           {game.spread && <span>{game.spread}</span>}
           {game.overUnder != null && <span>O/U {game.overUnder}</span>}
           {locked && !game.completed && <span className="lock">🔒</span>}
+          {onOpen && (
+            <button type="button" className="stats-btn" onClick={() => onOpen(game)}>
+              Stats ›
+            </button>
+          )}
         </span>
       </header>
       <TeamRow team={game.away} game={game} picked={pick?.teamId === game.away.id} locked={locked} onPick={onPick} result={pick?.result} />

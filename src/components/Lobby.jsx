@@ -7,7 +7,7 @@ function dayLabel(dateStr) {
   return d.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
-export default function Lobby({ games, picks, league, loading, error, onPick, onRetry }) {
+export default function Lobby({ games, picks, league, loading, error, onPick, onOpen, onRetry }) {
   const groups = useMemo(() => {
     const map = new Map();
     for (const g of games) {
@@ -67,7 +67,7 @@ export default function Lobby({ games, picks, league, loading, error, onPick, on
         <section key={day} className="day-group">
           <h2 className="day-title">{day}</h2>
           {list.map((g) => (
-            <GameCard key={g.id} game={g} pick={picks[pickKey(league, g.id)]} onPick={onPick} />
+            <GameCard key={g.id} game={g} pick={picks[pickKey(league, g.id)]} onPick={onPick} onOpen={onOpen} />
           ))}
         </section>
       ))}

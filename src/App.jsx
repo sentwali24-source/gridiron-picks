@@ -4,10 +4,13 @@ import { loadPicks, savePicks, gradePicks, pickKey } from './store/picks';
 import Lobby from './components/Lobby';
 import MyPicks from './components/MyPicks';
 import Leaderboard from './components/Leaderboard';
+import StatsTab from './components/StatsTab';
+import GameDetail from './components/GameDetail';
 
 const TABS = [
   { key: 'lobby', label: 'Lobby', icon: '🏈' },
   { key: 'picks', label: 'My Picks', icon: '✅' },
+  { key: 'stats', label: 'Stats', icon: '📊' },
   { key: 'board', label: 'Standings', icon: '🏆' },
 ];
 
@@ -98,10 +101,13 @@ export default function App() {
     return () => clearInterval(timer.current);
   }, [data.games, load]);
 
+  const [openGame, setOpenGame] = useState(null);
+
   const changeLeague = (key) => {
     if (key === league) return;
     setLeague(key);
     setWeek(null);
+    setOpenGame(null);
   };
 
   const makePick = (game, team) => {
@@ -142,6 +148,8 @@ export default function App() {
         return <MyPicks picks={picks} league={league} season={data.season} week={shownWeek} games={data.games} />;
       case 'board':
         return <Leaderboard picks={picks} league={league} season={data.season} />;
+      case 'stats':
+        return <StatsTab league={league} season={data.season} />;
       default:
         return (
           <Lobby
@@ -151,11 +159,15 @@ export default function App() {
             loading={loading}
             error={error}
             onPick={makePick}
+            onOpen={setOpenGame}
             onRetry={() => load()}
           />
         );
     }
   }, [tab, picks, league, data, shownWeek, loading, error]);
+
+  // Always show the freshest copy of the opened game (scores update under it).
+  const openGameLive = openGame ? data.games.find((g) => g.id === openGame.id) || openGame : null;
 
   return (
     <div className="app">
@@ -185,7 +197,18 @@ export default function App() {
         </div>
       )}
 
-      {tab !== 'board' && (
+      {openGameLive && (
+        <GameDetail
+          game={openGameLive}
+          league={league}
+          season={data.season}
+          pick={picks[pickKey(league, openGameLive.id)]}
+          onPick={makePick}
+          onClose={() => setOpenGame(null)}
+        />
+      )}
+
+      {tab !== 'board' && tab !== 'stats' && (
         <div className="weekbar">
           <button className="weeknav" disabled={!canPrev} onClick={() => setWeek(shownWeek - 1)} aria-label="Previous week">
             ‹

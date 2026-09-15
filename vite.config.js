@@ -32,7 +32,7 @@ export default defineConfig({
         runtimeCaching: [
           {
             // Live scores: always try the network, fall back to a recent copy offline.
-            urlPattern: ({ url }) => url.hostname === 'site.api.espn.com',
+            urlPattern: ({ url }) => /^(site|site\.web|sports\.core)\.api\.espn\.com$/.test(url.hostname),
             handler: 'NetworkFirst',
             options: {
               cacheName: 'espn-api',
